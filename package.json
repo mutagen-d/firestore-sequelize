@@ -1,0 +1,30 @@
+{
+  "name": "firestore-sequelize",
+  "version": "0.1.0",
+  "description": "A simple Sequelize like ORM for Firestore",
+  "main": "firestore-sequelize.js",
+  "types": "firestore-sequelize.d.ts",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mutagen-d/firestore-sequelize.git"
+  },
+  "keywords": [
+    "npm",
+    "firestore",
+    "sequelize",
+    "nosql"
+  ],
+  "author": "mutagen-d",
+  "license": "ISC",
+  "dependencies": {
+    "firebase-admin": "^9.7.0"
+  },
+  "devDependencies": {
+    "@jest/globals": "^26.6.2",
+    "firestore-jest-mock": "git+https://github.com/mutagen-d/firestore-jest-mock",
+    "jest": "^26.6.3"
+  }
+}
