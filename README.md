@@ -33,13 +33,13 @@ sequelize.initializeApp(admin)
 
 ## Model Definition
 ```javascript
-const { defineModel } = require("firestore-sequelize");
+const { defineModel, DataTypes } = require("firestore-sequelize");
 const User = defineModel("users", {
   login: "",
   name: "",
   email: "",
   admin: {
-    type: "boolean",
+    type: DataTypes.BOOLEAN,
     required: true,
     default: false,
   },
@@ -49,11 +49,11 @@ const User = defineModel("users", {
 // Subcollections
 const Team = defineModel("teams", {
   name: {
-    type: 'string',
+    type: DataTypes.STRING,
     required: true,
   },
   specialization: {
-    type: 'string',
+    type: DataTypes.STRING,
     required: true,
   },
 }, {
@@ -65,13 +65,19 @@ const Team = defineModel("teams", {
 Create record
 ```javascript
 const user = await User.create({
-  login: "john", name: "John Doe" , email: "john.doe@example.com", admin: false,
+  login: "john",
+  name: "John Doe" ,
+  email: "john.doe@example.com",
+  admin: false,
 });
 ```
 Another way to create user (not recommended)
 ```javascript
 const user = new User({
-  login: "john", name: "John Doe" , email: "john.doe@example.com", admin: false,
+  login: "john",
+  name: "John Doe",
+  email: "john.doe@example.com",
+  admin: false,
 }, {
   id: 'john',
 });
@@ -80,7 +86,9 @@ await user.save(true)
 ### `findOne`
 Find by id
 ```javascript
-const user = await User.findOne({ id: "e855cafd-6578-441d-afb8-efc37de90b8f" });
+const user = await User.findOne({
+  id: "e855cafd-6578-441d-afb8-efc37de90b8f",
+});
 ```
 Find using where
 ```javascript
@@ -93,7 +101,12 @@ Find or create if not found
 ```javascript
 const [user, created] = await User.findOrCreate({
   where: { login: "jane" },
-  defaults: { login: "jane", email: "jane.doe@example.com", name: "Jane Doe", admin: false },
+  defaults: {
+    login: "jane",
+    email: "jane.doe@example.com",
+    name: "Jane Doe",
+    admin: false,
+  },
 })
 ```
 ### `findAll`
@@ -107,7 +120,10 @@ const users = await User.findAll({
 Find all users by ids ordered by name
 ```javascript
 const users = await User.findAll({
-  ids: ["e855cafd-6578-441d-afb8-efc37de90b8f", "776b0026-aff0-48c2-a952-69619d7578c4"],
+  ids: [
+    "e855cafd-6578-441d-afb8-efc37de90b8f",
+    "776b0026-aff0-48c2-a952-69619d7578c4",
+  ],
   order: [["name"]],
 })
 ```
@@ -123,7 +139,9 @@ await User.update({
 ```
 Update user name using user instance
 ```javascript
-const user = await User.findOne({ id: "e855cafd-6578-441d-afb8-efc37de90b8f" });
+const user = await User.findOne({
+  id: "e855cafd-6578-441d-afb8-efc37de90b8f",
+});
 await user.update({
   name: 'Johnny Doe',
   coins: admin.firestore.FieldValue.increment(10),
@@ -131,7 +149,9 @@ await user.update({
 ```
 Another way to update
 ```javascript
-const user = await User.findOne({ id: "e855cafd-6578-441d-afb8-efc37de90b8f" });
+const user = await User.findOne({
+  id: "e855cafd-6578-441d-afb8-efc37de90b8f",
+});
 user.name = "Johnny Doe";
 user.coins += 10
 await user.save();
@@ -139,15 +159,22 @@ await user.save();
 ### `destroy`
 Delete User record using static class. By **default** all subcollections **will be deleted**, see [Subcollections](##Subcollections)
 ```javascript
-await User.destory({ id: "e855cafd-6578-441d-afb8-efc37de90b8f" });
+await User.destory({
+  id: "e855cafd-6578-441d-afb8-efc37de90b8f",
+});
 ```
 Use `ignoreSubcollections: true` to prevent subcollections from being deleted
 ```javascript
-await User.destroy({ id: "e855cafd-6578-441d-afb8-efc37de90b8f", ignoreSubcollections: true });
+await User.destroy({
+  id: "e855cafd-6578-441d-afb8-efc37de90b8f",
+  ignoreSubcollections: true,
+});
 ```
 Delete User record using user instance
 ```javascript
-const user = await User.findOne({ id: "e855cafd-6578-441d-afb8-efc37de90b8f" });
+const user = await User.findOne({
+  id: "e855cafd-6578-441d-afb8-efc37de90b8f",
+});
 await user.destroy();
 ```
 Delete all User records
@@ -164,11 +191,11 @@ const Photo = defineModel("photos", {
   description: '',
 });
 const User = defineModel("users", {
-  login: "john",
-  name: "John Doe",
-  email: "john.doe@example.com",
+  login: "",
+  name: "",
+  email: "",
   admin: {
-    type: "boolean",
+    type: DataTypes.BOOLEAN,
     required: true,
   },
 }, {
@@ -178,14 +205,18 @@ const User = defineModel("users", {
 ### `create`
 Create photo using user instance
 ```javascript
-const user = await User.findOne({ id: "e855cafd-6578-441d-afb8-efc37de90b8f" });
+const user = await User.findOne({
+  id: "e855cafd-6578-441d-afb8-efc37de90b8f",
+});
 const photo = await user.collectionCreate('photos', {
   url: 'https://example.com/user/john/photos/photo1.jpg',
 })
 ```
 Create photo using Photo static class (not recommended)
 ```javascript
-const user = await User.findOne({ id: "e855cafd-6578-441d-afb8-efc37de90b8f" });
+const user = await User.findOne({
+  id: "e855cafd-6578-441d-afb8-efc37de90b8f",
+});
 const photo = await Photo.create({
   url: 'https://example.com/user/john/photos/photo2.png',
   name: 'photo2',
@@ -202,7 +233,9 @@ const photo = await user.collectionFindOne('photos', {
 ```
 Find photo using Photo static class (not recommended)
 ```javascript
-const user = await User.findOne({ id: "e855cafd-6578-441d-afb8-efc37de90b8f" });
+const user = await User.findOne({
+  id: "e855cafd-6578-441d-afb8-efc37de90b8f",
+});
 const photo = await Photo.findOne({
   where: { name: 'photo2' },
 }, {
@@ -239,7 +272,9 @@ await photo.update({
 ### `destroy`
 Delete photo using user instance
 ```javascript
-const user = await User.findOne({ id: "e855cafd-6578-441d-afb8-efc37de90b8f" });
+const user = await User.findOne({
+  id: "e855cafd-6578-441d-afb8-efc37de90b8f",
+});
 await user.collectionDestroy('photos', {
   where: { name: 'photo2' },
 })
@@ -253,6 +288,8 @@ await photo.destroy()
 ```
 Delete all photos of user
 ```javascript
-const user = await User.findOne({ id: "e855cafd-6578-441d-afb8-efc37de90b8f" });
+const user = await User.findOne({
+  id: "e855cafd-6578-441d-afb8-efc37de90b8f",
+});
 await user.collectionDrop('photos')
 ```

@@ -41,6 +41,14 @@ export type Attrs = {
 
 export type Data = string | number | boolean | ArrayLike<any> | object
 
+export type DataType = {
+  STRING: 'string';
+  NUMBER: 'number';
+  BOOLEAN: 'boolean';
+  OBJECT: 'object';
+  ARRAY: 'array';
+}
+
 export type ColumnT<T> = {
   type: TypeName<T>
   required?: boolean
@@ -172,3 +180,5 @@ export type CreationAttributes<TSubs extends ArrayLike<{ name: string }>> = {
 }
 
 export function defineModel<TName extends string, TAttrs extends Attrs, TSubs extends ArrayLike<{ name: string }> = ModelConstructor<string, Attrs, { name: string }[]>[]>(name: TName, attributes: TAttrs | Attrs, opts?: CreationAttributes<TSubs>): ModelConstructor<TName, TAttrs, TSubs>
+
+export declare const DataTypes: DataType

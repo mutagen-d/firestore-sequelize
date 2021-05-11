@@ -18,6 +18,8 @@ const initializeApp = (_admin) => {
  *  ? "boolean"
  *  : T extends Function
  *  ? "function"
+ *  : T extends Array<any>
+ *  ? "array"
  *  : "object"} TypeName
  */
 /**
@@ -28,11 +30,30 @@ const initializeApp = (_admin) => {
  *  bigint: bigint
  *  undefined: undefined
  *  "function": function
+ *  array: Array<any>
  *  object: object
  * }} NameType
  */
 /** @type {NameType} */
 var NAME_TYPE = {}
+
+/**
+ * @typedef {{
+ *  STRING: "string";
+ *  NUMBER: "number";
+ *  BOOLEAN: 'boolean';
+ *  OBJECT: 'object';
+ *  ARRAY: 'array';
+ * }} DataType
+ */
+/** @type {DataType} */
+const DataTypes = {
+  STRING: 'string',
+  NUMBER: 'number',
+  BOOLEAN: 'boolean',
+  OBJECT: 'object',
+  ARRAY: 'array',
+}
 
 /**
  * @typedef {{
@@ -683,4 +704,4 @@ function defineModel(name, attributes, options = {}) {
   return Model;
 }
 
-module.exports = { defineModel, initializeApp };
+module.exports = { defineModel, initializeApp, DataTypes };
