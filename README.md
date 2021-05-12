@@ -1,4 +1,6 @@
 # Firestore Sequelize
+[![Build Status](https://travis-ci.org/mutagen-d/firestore-sequelize.svg?branch=master)](https://travis-ci.org/mutagen-d/firestore-sequelize)
+
 Inspired by [firestore-sequelizer](https://github.com/CaioFilus/firestore-sequelizer)
 # Simple Firebase ORM
 If you like to use Sequelize and use models in your backend projects try to use FirestoreSequelize, some features:
