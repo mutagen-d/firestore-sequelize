@@ -62,6 +62,40 @@ const Team = defineModel("teams", {
   subcollections: [User],
 })
 ```
+## API
+
+| Static Methods                         | Return Type                                           |
+| -------------------------------------- | ----------------------------------------------------- |
+| [`create()`](#`create`)                | `Promise<Model>`                                      |
+| [`findOne()`](#`findOne`)              | `Promise<Model \| null>`                              |
+| [`findOrCreate()`](#`findOrCreate`)    | `Promise<[Model, boolean]>`                           |
+| [`findAll()`](#`findAll`)              | `Promise<Model[]>`                                    |
+| [`update()`](#`update`)                | `Promise<WriteResult> \| Promise<WriteResult[]>`      |
+| [`destroy()`](#`destroy`)              | `Promise<WriteResult> \| Promise<WriteResult[]>`      |
+| `drop()`                               | `Promise<WriteResult> \| Promise<WriteResult[]>`      |
+| `docIds()`                             | `Promise<Model[]>`                                    |
+| `sync()`                               | `Promise<Model[]>`                                    |
+
+| Methods                                       | Return Type                                           |
+| --------------------------------------------- | ----------------------------------------------------- |
+| `getId()`                                     | `string`                                              |
+| `setId()`                                     | `void`                                                |
+| `save()`                                      | `Promise<WriteResult>`                                |
+| `update()`                                    | `Promise<WriteResult>`                                |
+| `destroy()`                                   | `Promise<WriteResult>`                                |
+| [`collectionCreate()`](#`collectionCreate`)   | `Promise<Model>`                                      |
+| [`collectionFindOne()`](#`collectionFindOne`) | `Promise<Model \| null>`                              |
+| [`collectionFindOrCreate()`](#`collectionFindOrCreate`) | `Promise<[Model, boolean]>`                 |
+| [`collectionFindAll()`](#`collectionFindAll`) | `Promise<Model[]>`                                    |
+| [`collectionUpdate()`](#`collectionUpdate`)   | `Promise<WriteResult> \| Promise<WriteResult[]>`      |
+| [`collectionDestroy()`](#`collectionDestroy`) | `Promise<WriteResult> \| Promise<WriteResult[]>`      |
+| [`collectionDrop()`](#`collectionDrop`)       | `Promise<WriteResult> \| Promise<WriteResult[]>`      |
+
+| Properties                                    | Value Type                                            |
+| --------------------------------------------- | ----------------------------------------------------- |
+| `ref`                                         | `DocumentReference`                                   |
+| `path`                                        | `string`                                              |
+
 ## CRUD operations
 ### `create`
 Create record
@@ -204,7 +238,7 @@ const User = defineModel("users", {
   subcollections: [Photo]
 });
 ```
-### `create`
+### `collectionCreate`
 Create photo using user instance
 ```javascript
 const user = await User.findOne({
@@ -226,7 +260,7 @@ const photo = await Photo.create({
   parentPath: user.path,
 })
 ```
-### `findOne`
+### `collectionFindOne`
 Find photo using user instance
 ```javascript
 const photo = await user.collectionFindOne('photos', {
@@ -244,7 +278,7 @@ const photo = await Photo.findOne({
   parentPath: user.path,
 })
 ```
-### `findAll`
+### `collectionFindAll`
 Find all photos using user instance
 ```javascript
 const photos = await user.collectionFindAll('photos', {
@@ -253,7 +287,7 @@ const photos = await user.collectionFindAll('photos', {
   }
 })
 ```
-### `update`
+### `collectionUpdate`
 Update photo using user instance
 ```javascript
 await user.collectionUpdate('photos', {
@@ -271,7 +305,7 @@ await photo.update({
   description: 'New photo',
 })
 ```
-### `destroy`
+### `collectionDestroy`
 Delete photo using user instance
 ```javascript
 const user = await User.findOne({
