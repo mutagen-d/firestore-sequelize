@@ -336,11 +336,6 @@ function defineModel(name, attributes, options = {}) {
       this.data = Model.formatData(model)
       /** @private */
       this.parentPath = opts.parentPath
-      /**
-       * @private
-       * @type {{ [name: string]: ModelItem<TSubs, string, ModelConstructor<string, Attrs>>}}
-       */
-      this.subcollections = subcollections
     }
 
     getId() {
@@ -391,28 +386,28 @@ function defineModel(name, attributes, options = {}) {
   }
   if (options.subcollections.length) {
     Model.prototype.collectionCreate = function collectionCreate(subcollectionName, subcollectionModel, opts) {
-      return this.subcollections[subcollectionName].create(subcollectionModel, { ...opts, parentPath: this.path })
+      return Model.subcollections[subcollectionName].create(subcollectionModel, { ...opts, parentPath: this.path })
     }
     Model.prototype.collectionUpdate = function collectionUpdate(subcollectionName, subcollectionModel, opts) {
-      return this.subcollections[subcollectionName].update(subcollectionModel, { ...opts, parentPath: this.path })
+      return Model.subcollections[subcollectionName].update(subcollectionModel, { ...opts, parentPath: this.path })
     }
     Model.prototype.collectionDestroy = function collectionDestroy(subcollectionName, opts) {
-      return this.subcollections[subcollectionName].destroy({ ...opts, parentPath: this.path })
+      return Model.subcollections[subcollectionName].destroy({ ...opts, parentPath: this.path })
     }
     Model.prototype.collectionDrop = function collectionDrop(subcollectionName, opts) {
-      return this.subcollections[subcollectionName].drop({ ...opts, parentPath: this.path })
+      return Model.subcollections[subcollectionName].drop({ ...opts, parentPath: this.path })
     }
     Model.prototype.collectionFindOne = function collectionFindOne(subcollectionName, opts) {
-      return this.subcollections[subcollectionName].findOne({ ...opts, parentPath: this.path })
+      return Model.subcollections[subcollectionName].findOne({ ...opts, parentPath: this.path })
     }
     Model.prototype.collectionFindAll = function collectionFindAll(subcollectionName, opts) {
-      return this.subcollections[subcollectionName].findAll({ ...opts, parentPath: this.path })
+      return Model.subcollections[subcollectionName].findAll({ ...opts, parentPath: this.path })
     }
     Model.prototype.collectionFindOrCreate = function collectionFindOrCreate(subcollectionName, opts) {
-      return this.subcollections[subcollectionName].findOrCreate({ ...opts, parentPath: this.path })
+      return Model.subcollections[subcollectionName].findOrCreate({ ...opts, parentPath: this.path })
     }
     Model.prototype.collectionSync = function collectionFindOrCreate(subcollectionName, opts) {
-      return this.subcollections[subcollectionName].sync({ ...opts, parentPath: this.path })
+      return Model.subcollections[subcollectionName].sync({ ...opts, parentPath: this.path })
     }
   } else {
     Model.prototype.collectionCreate = function () {
