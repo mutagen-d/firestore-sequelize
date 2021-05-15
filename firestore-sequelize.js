@@ -221,9 +221,23 @@ const DataTypes = {
  */
 
 /**
+ * @template TSubs
+ * @typedef {{
+ *  collectionCreate<TName extends ModelItemName<TSubs>>(name: TName, model: ModelInput<ModelItem<TSubs, TName>>, opts?: Omit<Partial<ModelOption>, 'parentPath'>): ReturnType<ModelItem<TSubs, TName>['create']>
+ *  collectionUpdate<TName extends ModelItemName<TSubs>>(name: TName, model: ModelUpdateInput<ModelItem<TSubs, TName>>, opts?: Omit<FilterOption<ModelAttrs<ModelItem<TSubs, TName>>>, 'parentPath'>): ReturnType<Model<TSubs, TName>['update']>
+ *  collectionDestroy<TName extends ModelItemName<TSubs>>(name: TName, opts: Omit<FilterOption<ModelAttrs<ModelItem<TSubs, TName>>>, 'parentPath'> & { force?: boolean } & DestroyOption<TSubs>): ReturnType<ModelItem<TSubs, TName>['destroy']>
+ *  collectionDrop<TName extends ModelItemName<TSubs>>(name: TName, opts?: DestroyOption<TSubs>): ReturnType<ModelItem<TSubs, TName>['drop']>
+ *  collectionFindOne<TName extends ModelItemName<TSubs>>(name: TName, opts?: Omit<FilterOption<ModelAttrs<ModelItem<TSubs, TName>>>, 'parentPath'>): ReturnType<ModelItem<TSubs, TName>['findOne']>
+ *  collectionFindOrCreate<TName extends ModelItemName<TSubs>>(name: TName, opts?: Omit<FilterOption<ModelAttrs<ModelItem<TSubs, TName>>>, 'parentPath'> & { defaults?: ModelInput<ModelItem<TSubs, TName>> }): ReturnType<ModelItem<TSubs, TName>['findOrCreate']>
+ *  collectionFindAll<TName extends ModelItemName<TSubs>>(name: TName, opts?: Omit<FilterOption<ModelAttrs<ModelItem<TSubs, TName>>>, 'parentPath' | 'id'>): ReturnType<ModelItem<TSubs, TName>['findAll']>
+ *  collectionSync<TName extends ModelItemName<TSubs>>(name: TName, opts?: Omit<FilterOption<ModelAttrs<ModelItem<TSubs, TName>>>, 'parentPath' | 'id'>): ReturnType<ModelItem<TSubs, TName>['sync']>
+ * }} SubsMethods
+ */
+
+/**
  * @template TAttrs
  * @template TSubs
- * @typedef {Props<AttrsLike<TAttrs>> & {
+ * @typedef {Props<AttrsLike<TAttrs>> & SubsMethods<TSubs> & {
  *  prototype: any
  *  data: Props<AttrsLike<TAttrs>>
  *  getId(): string;
@@ -234,14 +248,6 @@ const DataTypes = {
  *  update(model: UpdateProps<TAttrs>): Promise<WriteResult>
  *  readonly path: string
  *  toJSON(): { id: string; data: Props<TAttrs>; path: string; parentPath?: string; }
- *  collectionCreate<TName extends ModelItemName<TSubs>, TModel extends ModelItem<TSubs, TName>>(name: TName, model: ModelInput<TModel>, opts?: Omit<Partial<ModelOption>, 'parentPath'>): ReturnType<TModel['create']>
- *  collectionUpdate<TName extends ModelItemName<TSubs>, TModel extends ModelItem<TSubs, TName>>(name: TName, model: ModelUpdateInput<TModel>, opts?: Omit<FilterOption<ModelAttrs<TModel>>, 'parentPath'>): ReturnType<TModel['update']>
- *  collectionDestroy<TName extends ModelItemName<TSubs>, TModel extends ModelItem<TSubs, TName>>(name: TName, opts: Omit<FilterOption<ModelAttrs<TModel>>, 'parentPath'> & { force?: boolean } & DestroyOption<TSubs>): ReturnType<TModel['destroy']>
- *  collectionDrop<TName extends ModelItemName<TSubs>, TModel extends ModelItem<TSubs, TName>>(name: TName, opts?: DestroyOption<TSubs>): ReturnType<TModel['drop']>
- *  collectionFindOne<TName extends ModelItemName<TSubs>, TModel extends ModelItem<TSubs, TName>>(name: TName, opts?: Omit<FilterOption<ModelAttrs<TModel>>, 'parentPath'>): ReturnType<TModel['findOne']>
- *  collectionFindOrCreate<TName extends ModelItemName<TSubs>, TModel extends ModelItem<TSubs, TName>>(name: TName, opts?: Omit<FilterOption<ModelAttrs<TModel>>, 'parentPath'> & { defaults?: ModelInput<TModel> }): ReturnType<TModel['findOrCreate']>
- *  collectionFindAll<TName extends ModelItemName<TSubs>, TModel extends ModelItem<TSubs, TName>>(name: TName, opts?: Omit<FilterOption<ModelAttrs<TModel>>, 'parentPath' | 'id'>): ReturnType<TModel['findAll']>
- *  collectionSync<TName extends ModelItemName<TSubs>, TModel extends ModelItem<TSubs, TName>>(name: TName, opts?: Omit<FilterOption<ModelAttrs<TModel>>, 'parentPath' | 'id'>): ReturnType<TModel['sync']>
  * }} Model
  */
 
