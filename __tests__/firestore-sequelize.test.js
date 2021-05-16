@@ -20,7 +20,7 @@ const {
   mockBatchSet,
   mockListDocuments,
 } = require('firestore-jest-mock/mocks/firestore')
-const { defineModel, initializeApp } = require('../firestore-sequelize')
+const { defineModel, initializeApp } = require('../index')
 
 const Photo = defineModel('photos', {
   url: '',

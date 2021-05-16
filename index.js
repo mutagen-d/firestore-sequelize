@@ -179,14 +179,14 @@ const DataTypes = {
 /**
  * @template TAttrs
  * @typedef {{
- *  [K in keyof TAttrs]?: PropsItem<TAttrs, K> | { value: PropsItem<TAttrs, K>; operation?: WhereFilterOp }
+ *  [K in keyof TAttrs]?: PropsItem<TAttrs, K> | { value: PropsItem<TAttrs, K> | PropsItem<TAttrs, K>[]; operation?: WhereFilterOp }
  * }} WhereFilter
  */
 
 /**
  * @template TWhere
  * @typedef {{
- *  [K in keyof WhereAttrs<TWhere>]: { value: Props<WhereAttrs<TWhere>>[K]; operation: WhereFilterOp }
+ *  [K in keyof WhereAttrs<TWhere>]: { value: PropsItem<WhereAttrs<TWhere>, K> | PropsItem<WhereAttrs<TWhere>, K>[]; operation: WhereFilterOp }
  * }} NormalizedWhereFilter
  */
 
