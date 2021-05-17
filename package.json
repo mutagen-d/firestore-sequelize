@@ -1,6 +1,6 @@
 {
   "name": "firestore-sequelize",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "A simple Sequelize like ORM for Firestore",
   "main": "index.js",
   "types": "index.d.ts",
