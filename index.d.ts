@@ -3,7 +3,7 @@ import * as Admin from "firebase-admin"
 
 export function initializeApp(admin: typeof Admin): void
 
-export type TypeName<T> = T extends string
+type TypeName<T> = T extends string
   ? "string"
   : T extends number
   ? "number"
@@ -19,7 +19,7 @@ export type TypeName<T> = T extends string
   ? "array"
   : "object"
 
-export type NameType<T> = T extends "string"
+type NameType<T> = T extends "string"
   ? string
   : T extends "number"
   ? number
@@ -36,86 +36,108 @@ export type NameType<T> = T extends "string"
   : object
 
 export type Attrs = {
-  [name: string]: Data | Column
+  [name: string]: DataType | Column
 }
 
-export type Data = string | number | boolean | ArrayLike<any> | object
+type DataType = string | number | boolean | Array<any> | object
 
-export type DataType = {
-  STRING: 'string';
-  NUMBER: 'number';
-  BOOLEAN: 'boolean';
-  OBJECT: 'object';
-  ARRAY: 'array';
-}
+type Column<T = DataType> = T extends string
+  ? ColumnShape<string>
+  : T extends number
+  ? ColumnShape<number>
+  : T extends boolean
+  ? ColumnShape<boolean>
+  : T extends Array<any>
+  ? ColumnShape<T>
+  : T extends object
+  ? ColumnShape<T>
+  : never
 
-export type ColumnT<T> = {
-  type: TypeName<T>
+type ColumnShape<T = DataType> = {
+  type: TypeName<T>;
   required?: boolean
   default?: T
 }
 
-export type Column = ColumnT<Data>
+/**
+ * type of `type` property of column
+ */
+type ColumnType<TCol extends Column> = NameType<TCol['type']>
 
-export type ColumnType<T> = T extends Column ? NameType<T['type']> : never
+/**
+ * type of `default` property of column if exists, otherwise type of `type` property
+ */
+type ColumnDefault<TCol extends Column> = TCol['default'] extends undefined ? ColumnType<TCol> : TCol['default']
+
+/**
+ * if typeof `default` prop extends typeof `type` prop, then take `default`, otherwise take `type`
+ */
+type ColumnDataType<TCol extends Column> = ColumnDefault<TCol> extends ColumnType<TCol> ? ColumnDefault<TCol> : ColumnType<TCol>
+
+type AttrDataType<T extends DataType | Column> = T extends Column ? ColumnDataType<T> : T
+
+type AttrColumn<T extends DataType | Column> = T extends Column ? T : Column<T>
 
 export type Props<TAttrs extends Attrs> = {
-  [K in keyof TAttrs]: TAttrs[K] extends Column ? ColumnType<TAttrs[K]> : TAttrs[K] extends Data ? TAttrs[K] : never
+  [K in keyof TAttrs]: AttrDataType<TAttrs[K]>
 }
 
-export type PropsItem<TAttrs, TKey> = TKey extends keyof TAttrs ? (TAttrs[TKey] extends Column ? ColumnType<TAttrs[TKey]> : TAttrs[TKey] extends Data ? TAttrs[TKey] : never) : never
+type PropsItem<TAttrs extends Attrs, TKey extends keyof TAttrs> = AttrDataType<TAttrs[TKey]>
 
-export type OptionalProps<TAttrs extends Attrs> = Partial<Props<TAttrs>>
+type OptionalProps<TAttrs extends Attrs> = Partial<Props<TAttrs>>
 
-export type UpdateProps<TAttrs extends Attrs> = { [K in keyof TAttrs]?: PropsItem<TAttrs, K> | FieldValue }
+type UpdateProps<TAttrs extends Attrs> = { [K in keyof TAttrs]?: PropsItem<TAttrs, K> | FieldValue }
 
-export type ModelInput<TModel> = OptionalProps<ModelAttrs<TModel>>
+type ModelInput<TModel> = OptionalProps<ModelAttrs<TModel>>
 
-export type ModelUpdateInput<TModel> = UpdateProps<ModelAttrs<TModel>>
+type ModelUpdateInput<TModel> = UpdateProps<ModelAttrs<TModel>>
 
-export type ModelLike<TModel, TName extends string = string> = Extract<TModel, {
+type ModelShapeLike<TName extends string = string> = {
   name: TName;
   create: any;
   update: any;
   destroy: any;
+  drop: any;
   findOne: any;
   findAll: any;
   findOrCreate: any;
   sync: any
-}>
-
-export type ModelListLike<TModelList extends ArrayLike<any>> = TModelList[number] extends { name: string } ? TModelList : never
-
-export type ModelItemLike<TModelList extends ArrayLike<any>> = ModelListLike<TModelList>[number]
-
-export type ModelItem<TModelList extends ArrayLike<any>, TName extends string = string> = ModelLike<ModelItemLike<TModelList>, TName>
-
-export type ModelItemProps<TModelList extends ArrayLike<any>, TName extends string = string> = OptionalProps<ModelAttrs<ModelItem<TModelList, TName>>>
-
-export type ModelItemName<TModelList extends ArrayLike<any>> = ModelItemLike<TModelList>['name']
-
-export type ModelAttrs<TModel> = TModel extends { name: string; __attributes: any } ? TModel['__attributes'] : never
-
-export type ModelOption = { id: string; parentPath?: string }
-
-export type WhereAttrs<TWhere extends WhereFilter> = TWhere extends WhereFilter<infer TAttrs> ? Extract<TAttrs, Attrs> : never
-
-export type AttrsColumn<TAttrs extends Attrs> = {
-  [K in keyof TAttrs]: TAttrs[K] extends Column ? TAttrs[K] : TAttrs[K] extends Data ? ColumnT<TAttrs[K]> : never
 }
 
-export type WhereFilter<TAttrs extends Attrs = Attrs> = { id?: string } & {
+export type ModelLike<TModel, TName extends string = string> = Extract<TModel, ModelShapeLike<TName>>
+
+type ModelListLike<TModelList extends ArrayLike<any>> = TModelList[number] extends { name: string } ? TModelList : never
+
+type ModelItemLike<TModelList extends ArrayLike<any>> = ModelListLike<TModelList>[number]
+
+type ModelItem<TModelList extends ArrayLike<any>, TName extends string = string> = ModelLike<ModelItemLike<TModelList>, TName>
+
+type ModelItemProps<TModelList extends ArrayLike<any>, TName extends string = string> = OptionalProps<ModelAttrs<ModelItem<TModelList, TName>>>
+
+type ModelItemName<TModelList extends ArrayLike<any>> = ModelItemLike<TModelList>['name']
+
+type ModelAttrs<TModel> = TModel extends { name: string; __attributes: any } ? TModel['__attributes'] : never
+
+type ModelOption = { id: string; parentPath?: string }
+
+type WhereAttrs<TWhere extends WhereFilter> = TWhere extends WhereFilter<infer TAttrs> ? Extract<TAttrs, Attrs> : never
+
+export type AttrsColumn<TAttrs extends Attrs> = {
+  [K in keyof TAttrs]: AttrColumn<TAttrs[K]>
+}
+
+type WhereFilter<TAttrs extends Attrs = Attrs> = { id?: string } & {
   [K in keyof TAttrs]?: PropsItem<TAttrs, K> | { value: PropsItem<TAttrs, K> | PropsItem<TAttrs, K>[]; operation?: WhereFilterOp }
 }
 
-export type NormalizedWhereFilter<TWhere extends WhereFilter> = {
+type NormalizedWhereFilter<TWhere extends WhereFilter> = {
   [K in keyof WhereAttrs<TWhere>]: { value: PropsItem<WhereAttrs<TWhere>, K> | PropsItem<WhereAttrs<TWhere>, K>[]; operation: WhereFilterOp }
 }
-export type ParentOption = { parentPath?: string }
+type ParentOption = { parentPath?: string }
 
-export type DestroyOption<TSubs extends ArrayLike<{ name: string }>> = { ignoreSubcollections?: boolean | ModelItemName<TSubs>[] }
+type DestroyOption<TSubs extends ArrayLike<{ name: string }>> = { ignoreSubcollections?: boolean | ModelItemName<TSubs>[] }
 
-export type OrderFilter<TAttrs extends Attrs> = [keyof TAttrs | FieldPath, OrderByDirection]
+type OrderFilter<TAttrs extends Attrs> = [keyof TAttrs | FieldPath, OrderByDirection]
 
 export type Filter<TAttrs extends Attrs> = {
   ids?: string[]
@@ -127,9 +149,9 @@ export type Filter<TAttrs extends Attrs> = {
 
 export type FilterOption<TAttrs extends Attrs> = Partial<ModelOption> & Filter<TAttrs>
 
-export type DefaultModelConstructor = ModelConstructor<string, Attrs, never>
+type DefaultModelConstructor = ModelConstructor<string, Attrs, never>
 
-export type SubsMethods<TSubs extends ArrayLike<{ name: string }>> = {
+type SubsMethods<TSubs extends ArrayLike<{ name: string }>> = {
   collectionCreate<TName extends ModelItemName<TSubs>>(name: TName, model: ModelInput<ModelItem<TSubs, TName>>, opts?: Omit<Partial<ModelOption>, 'parentPath'>): ReturnType<ModelItem<TSubs, TName>['create']>
   collectionUpdate<TName extends ModelItemName<TSubs>>(name: TName, model: ModelUpdateInput<ModelItem<TSubs, TName>>, opts?: Omit<FilterOption<ModelAttrs<ModelItem<TSubs, TName>>>, 'parentPath'>): ReturnType<ModelItem<TSubs, TName>['update']>
   collectionDestroy<TName extends ModelItemName<TSubs>>(name: TName, opts: Omit<FilterOption<ModelAttrs<ModelItem<TSubs, TName>>>, 'parentPath'> & { force?: boolean } & DestroyOption<TSubs>): ReturnType<ModelItem<TSubs, TName>['destroy']>
@@ -177,7 +199,7 @@ export type ModelConstructor<TName extends string = string, TAttrs extends Attrs
   buildQuery(collection: CollectionReference, opts: Filter<TAttrs>): Query
 }
 
-export type SubcollectionListLike<TSubs extends ArrayLike<{ name: string }>> = TSubs[number] extends { name: string } ? TSubs : never
+type SubcollectionListLike<TSubs extends ArrayLike<{ name: string }>> = TSubs[number] extends { name: string } ? TSubs : never
 
 export type CreationAttributes<TSubs extends ArrayLike<{ name: string }>> = {
   subcollections?: SubcollectionListLike<TSubs>
@@ -185,4 +207,10 @@ export type CreationAttributes<TSubs extends ArrayLike<{ name: string }>> = {
 
 export function defineModel<TName extends string, TAttrs extends Attrs, TSubs extends ArrayLike<{ name: string }> = DefaultModelConstructor[]>(name: TName, attributes: TAttrs | Attrs, opts?: CreationAttributes<TSubs>): ModelConstructor<TName, TAttrs, TSubs>
 
-export declare const DataTypes: DataType
+export declare const DataTypes: {
+  STRING: 'string';
+  NUMBER: 'number';
+  BOOLEAN: 'boolean';
+  OBJECT: 'object';
+  ARRAY: 'array';
+}
