@@ -34,19 +34,16 @@ const initializeApp = (_admin) => {
  *  object: object
  * }} NameType
  */
-/** @type {NameType} */
-var NAME_TYPE = {}
 
 /**
- * @typedef {{
+ * @type {{
  *  STRING: "string";
  *  NUMBER: "number";
  *  BOOLEAN: 'boolean';
  *  OBJECT: 'object';
  *  ARRAY: 'array';
- * }} DataType
+ * }}
  */
-/** @type {DataType} */
 const DataTypes = {
   STRING: 'string',
   NUMBER: 'number',
@@ -57,11 +54,11 @@ const DataTypes = {
 
 /**
  * @typedef {{
- *  [name: string]: Data | Column
+ *  [name: string]: DataType | ColumnDT
  * }} Attrs
  */
 /**
- * @typedef {string | number | boolean | {}} Data
+ * @typedef {string | number | boolean | Array<any> | {}} DataType
  */
 
 /**
@@ -74,27 +71,60 @@ const DataTypes = {
  *  type: TypeName<T>
  *  required?: boolean;
  *  default?: T
- * }} ColumnT
+ * }} ColumnShape
  */
 
 /**
- * @typedef {ColumnT<Data>} Column
+ * @template T
+ * @typedef {T extends string
+ *  ? ColumnShape<string>
+ *  : T extends number
+ *  ? ColumnShape<number>
+ *  : T extends boolean
+ *  ? ColumnShape<boolean>
+ *  : T extends Array<any>
+ *  ? ColumnShape<T>
+ *  : T extends object
+ *  ? ColumnShape<T>
+ *  : never
+ * } Column
+ */
+
+/**
+ * @typedef {Column<DataType>} ColumnDT
+ */
+/**
+ * @template TCol
+ * @typedef {TCol extends ColumnDT ? (NameType[TCol['type']]) : never} ColumnType
+ */
+/**
+ * @template TCol
+ * @typedef {TCol extends ColumnDT ? (TCol['default'] extends undefined ? ColumnType<TCol> : TCol['default']) : never} ColumnDefault
+ */
+/**
+ * @template TCol
+ * @typedef {TCol extends ColumnDT ? (ColumnDefault<TCol> extends ColumnType<TCol> ? ColumnDefault<TCol> : ColumnType<TCol>) : never} ColumnDataType
  */
 /**
  * @template T
- * @typedef {T extends Column ? (typeof NAME_TYPE[T['type']]) : never} ColumnType
+ * @typedef {T extends DataType | ColumnDT ? (T extends ColumnDT ? ColumnDataType<T> : T) : never} AttrDataType
  */
+/**
+ * @template T
+ * @typedef {T extends DataType | ColumnDT ? (T extends ColumnDT ? T : Column<T>) : never} AttrColumn
+ */
+
 /**
  * @template TAttrs
  * @typedef {{
- *  [K in keyof TAttrs]: TAttrs[K] extends Column ? ColumnType<TAttrs[K]> : TAttrs[K] extends Data ? TAttrs[K] : never
+ *  [K in keyof TAttrs]: AttrDataType<TAttrs[K]>
  * }} Props
  */
 
 /**
  * @template TAttrs
  * @template TKey
- * @typedef {TKey extends keyof TAttrs ? (TAttrs[TKey] extends Column ? ColumnType<TAttrs[TKey]> : TAttrs[TKey] extends Data ? TAttrs[TKey] : never) : never} PropsItem
+ * @typedef {TKey extends keyof TAttrs ? AttrDataType<TAttrs[TKey]> : never} PropsItem
  */
 
 /**
@@ -172,7 +202,7 @@ const DataTypes = {
 /**
  * @template TAttrs
  * @typedef {{
- *  [K in keyof TAttrs]: TAttrs[K] extends Column ? TAttrs[K] : TAttrs[K] extends Data ? ColumnT<TAttrs[K]> : never
+ *  [K in keyof TAttrs]: AttrColumn<TAttrs[K]>
  * }} AttrsColumn
  */
 
