@@ -126,12 +126,26 @@ export type AttrsColumn<TAttrs extends Attrs> = {
   [K in keyof TAttrs]: AttrColumn<TAttrs[K]>
 }
 
-type WhereFilter<TAttrs extends Attrs = Attrs> = { id?: string } & {
-  [K in keyof TAttrs]?: PropsItem<TAttrs, K> | { value: PropsItem<TAttrs, K> | PropsItem<TAttrs, K>[]; operation?: WhereFilterOp }
+type DataTypeOrColumn = DataType | Column
+
+type WhereData<T extends DataTypeOrColumn = DataTypeOrColumn, TOp extends WhereFilterOp = WhereFilterOp> = TOp extends ('in' | 'not-in' | 'array-contains-any') ? {
+  value: AttrDataType<T>[]
+  operation: TOp
+} : {
+  value: AttrDataType<T>
+  operation?: TOp
 }
 
-type NormalizedWhereFilter<TWhere extends WhereFilter> = {
-  [K in keyof WhereAttrs<TWhere>]: { value: PropsItem<WhereAttrs<TWhere>, K> | PropsItem<WhereAttrs<TWhere>, K>[]; operation: WhereFilterOp }
+type Where<TAttrs extends Attrs> = {
+  [K in keyof TAttrs]?: WhereData<TAttrs[K]>
+}
+
+type WhereFilter<TAttrs extends Attrs = Attrs, TWhere extends Where<TAttrs> = Where<TAttrs>> = {
+  [K in keyof TAttrs]?: AttrDataType<TAttrs[K]> | WhereData<TAttrs[K], TWhere[K]['operation']>
+}
+
+type NormalizedWhereFilter<TAttrs extends Attrs, TWhere extends WhereFilter<TAttrs>> = {
+  [K in keyof TAttrs]: TWhere[K] extends AttrDataType<TAttrs[K]> ? { value: TWhere[K]; operation: '==' } : Required<TWhere[K]>
 }
 type ParentOption = { parentPath?: string }
 
@@ -195,7 +209,7 @@ export type ModelConstructor<TName extends string = string, TAttrs extends Attrs
   sync(opts?: Omit<FilterOption<TAttrs>, 'id'> & { setModel?: boolean }): Promise<Model<TAttrs, TSubs>[]>
   formatData(model: OptionalProps<TAttrs>): Props<TAttrs>
   subcollectionNames(opts?: { ignoreSubcollections?: boolean | ModelItemName<TSubs>[] }): ModelItemName<TSubs>[]
-  normalizeWhereFilter<TWhere extends WhereFilter<TAttrs>>(where: TWhere | WhereFilter<TAttrs>): NormalizedWhereFilter<TWhere>
+  normalizeWhereFilter<TWhere extends WhereFilter<TAttrs>>(where: TWhere | WhereFilter<TAttrs>): NormalizedWhereFilter<TAttrs, TWhere>
   buildQuery(collection: CollectionReference, opts: Filter<TAttrs>): Query
 }
 
