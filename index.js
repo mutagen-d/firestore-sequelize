@@ -206,17 +206,50 @@ const DataTypes = {
  * }} AttrsColumn
  */
 
+
+/**
+ * @typedef {DataType | ColumnDT} DataTypeOrColumn
+ */
+
+/**
+ * @template T
+ * @template TOp
+ * @typedef {TOp extends ('in' | 'not-in' | 'array-contains-any') ? {
+ *  value: AttrDataType<T>[]
+ *  operation: TOp
+ * } : {
+ *  value: AttrDataType<T>
+ *  operation?: TOp
+ * } WhereData
+ */
+/**
+ * @template T
+ * @typedef {WhereData<T, WhereFilterOp>} WhereDataDT
+ */
+
 /**
  * @template TAttrs
+ * @typedef {{ [K in keyof TAttrs]?: WhereDataDT<TAttrs[K]> }} Where
+ */
+
+/**
+ * @template TAttrs
+ * @template TWhere
  * @typedef {{
- *  [K in keyof TAttrs]?: PropsItem<TAttrs, K> | { value: PropsItem<TAttrs, K> | PropsItem<TAttrs, K>[]; operation?: WhereFilterOp }
+ *  [K in keyof TAttrs]?: AttrDataType<TAttrs[K]> | WhereData<TAttrs[K], Extract<TWhere, Where<TAttrs>>[K]['operation']>
  * }} WhereFilter
  */
 
 /**
+ * @template TAttrs
+ * @typedef {WhereFilter<TAttrs, Where<TAttrs>>} WhereFilterDT
+ */
+
+/**
+ * @template TAttrs
  * @template TWhere
  * @typedef {{
- *  [K in keyof WhereAttrs<TWhere>]: { value: PropsItem<WhereAttrs<TWhere>, K> | PropsItem<WhereAttrs<TWhere>, K>[]; operation: WhereFilterOp }
+ *  [K in keyof TAttrs]: TWhere[K] extends AttrDataType<TAttrs[K]> ? { value: TWhere[K]; operation: '==' } : Required<TWhere[K]>
  * }} NormalizedWhereFilter
  */
 
@@ -234,7 +267,7 @@ const DataTypes = {
  * @template TAttrs
  * @typedef {{
  *  ids?: string[]
- *  where?: WhereFilter<TAttrs>
+ *  where?: WhereFilterDT<TAttrs>
  *  order?: OrderFilter<TAttrs>[]
  *  limit?: number
  *  offset?: number
@@ -305,7 +338,7 @@ const DataTypes = {
  *  sync(opts?: Omit<FilterOption<TAttrs>, 'id'> & { setModel?: boolean }): Promise<Model<TAttrs, TSubs>[]>
  *  formatData(model: OptionalProps<TAttrs>): Props<TAttrs>
  *  subcollectionNames(opts?: DestroyOption<TSubs>): ModelItemName<TSubs>[]
- *  normalizeWhereFilter<TWhere extends WhereFilter<TAttrs>>(where: TWhere | WhereFilter<TAttrs>): NormalizedWhereFilter<TWhere>
+ *  normalizeWhereFilter<TWhere extends WhereFilterDT<TAttrs>>(where: TWhere | WhereFilterDT<TAttrs>): NormalizedWhereFilter<TAttrs, TWhere>
  *  buildQuery(collection: CollectionReference, opts: Filter<TAttrs>): Query
  * }} ModelConstructor
  * 
