@@ -128,13 +128,34 @@ export type AttrsColumn<TAttrs extends Attrs> = {
 
 type DataTypeOrColumn = DataType | Column
 
-type WhereData<T extends DataTypeOrColumn = DataTypeOrColumn, TOp extends WhereFilterOp = WhereFilterOp> = TOp extends ('in' | 'not-in' | 'array-contains-any') ? {
-  value: AttrDataType<T>[]
-  operation: TOp
-} : {
-  value: AttrDataType<T>
-  operation?: TOp
-}
+type WhereOperationTypeA = 'array-contains' | 'array-contains-any'
+type WhereOperationTypeI = 'in' | 'not-in'
+
+type WhereData<T extends DataTypeOrColumn, TOp extends WhereFilterOp = WhereFilterOp> = AttrColumn<T>['type'] extends 'array'
+? (
+  TOp extends 'array-contains'
+  ? {
+    value: AttrDataType<T> extends Array<any> ? AttrDataType<T>[number] : never
+    operation: TOp
+  }
+  : TOp extends WhereOperationTypeI
+  ? never
+  : {
+    value: AttrDataType<T>
+    operation: TOp
+  }
+) : (
+  TOp extends WhereOperationTypeA
+  ? never
+  : TOp extends WhereOperationTypeI
+  ? {
+    value: AttrDataType<T>[]
+    operation: TOp
+  } : {
+    value: AttrDataType<T>
+    operation?: TOp
+  }
+)
 
 type Where<TAttrs extends Attrs> = {
   [K in keyof TAttrs]?: WhereData<TAttrs[K]>
