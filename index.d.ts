@@ -142,7 +142,7 @@ type WhereData<T extends DataTypeOrColumn, TOp extends WhereFilterOp = WhereFilt
   ? never
   : {
     value: AttrDataType<T>
-    operation: TOp
+    operation?: TOp
   }
 ) : (
   TOp extends WhereOperationTypeA

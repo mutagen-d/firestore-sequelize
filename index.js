@@ -212,14 +212,39 @@ const DataTypes = {
  */
 
 /**
+ * @typedef {'array-contains' | 'array-contains-any'} WhereOperationTypeA
+ * @typedef {'in' | 'not-in'} WhereOperationTypeI
+ */
+
+/**
  * @template T
  * @template TOp
- * @typedef {TOp extends ('in' | 'not-in' | 'array-contains-any') ? {
- *  value: AttrDataType<T>[]
- *  operation: TOp
- * } : {
- *  value: AttrDataType<T>
- *  operation?: TOp
+ * @typedef {AttrColumn<T>['type'] extends 'array'
+ * ? (
+ *  TOp extends 'array-contains'
+ *  ? {
+ *    value: AttrDataType<T> extends Array<any> ? AttrDataType<T>[number] : never
+ *    operation: TOp
+ *  }
+ *  : TOp extends WhereOperationTypeI
+ *  ? never
+ *  : {
+ *    value: AttrDataType<T>
+ *    operation?: TOp
+ *  }
+ * ) : (
+ *  TOp extends WhereOperationTypeA
+ *  ? never
+ *  : TOp extends WhereOperationTypeI
+ *  ? {
+ *    value: AttrDataType<T>[]
+ *    operation: TOp
+ *  }
+ *  : {
+ *    value: AttrDataType<T>
+ *    operation?: TOp
+ *  }
+ * )
  * } WhereData
  */
 /**
