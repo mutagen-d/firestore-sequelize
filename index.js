@@ -217,19 +217,19 @@ const DataTypes = {
  */
 
 /**
- * @template T
+ * @template TADataType
  * @template TOp
- * @typedef {AttrColumn<T>['type'] extends 'array'
+ * @typedef {TADataType extends Array<any>
  * ? (
  *  TOp extends 'array-contains'
  *  ? {
- *    value: AttrDataType<T> extends Array<any> ? AttrDataType<T>[number] : never
+ *    value: TADataType extends Array<any> ? TADataType[number] : never
  *    operation: TOp
  *  }
  *  : TOp extends WhereOperationTypeI
  *  ? never
  *  : {
- *    value: AttrDataType<T>
+ *    value: TADataType
  *    operation?: TOp
  *  }
  * ) : (
@@ -237,31 +237,96 @@ const DataTypes = {
  *  ? never
  *  : TOp extends WhereOperationTypeI
  *  ? {
- *    value: AttrDataType<T>[]
+ *    value: TADataType[]
  *    operation: TOp
  *  }
  *  : {
- *    value: AttrDataType<T>
+ *    value: TADataType
  *    operation?: TOp
  *  }
  * )
- * } WhereData
+ * } WhereColumn
  */
 /**
  * @template T
- * @typedef {WhereData<T, WhereFilterOp>} WhereDataDT
+ * @typedef {WhereColumn<T, WhereFilterOp>} WhereColumnDT
+ */
+
+/**
+ * @template T
+ * @template Key
+ * @typedef {Key extends keyof T
+ * ? (Key extends string
+ *  ? (
+ *    T[Key] extends Record<string, any>
+ *    ? (
+ *      `${Key}.${Path<T[Key], Exclude<keyof T[Key], keyof Array<unknown>>> & string}`
+ *      | `${Key}.${Exclude<keyof T[Key], keyof Array<unknown>> & string}`
+ *      | Key
+ *    ) : Key
+ *  ) : never
+ * ) : never} Path
+ */
+/**
+ * @template T
+ * @typedef {Path<T, keyof T>} PathDT
+ */
+
+/**
+ * @template T
+ * @template P
+ * @typedef {P extends Path<T>
+ * ? (P extends `${infer Key}.${infer Rest}`
+ *  ? (
+ *    Key extends keyof T
+ *    ? (
+ *      Rest extends Path<T[Key]>
+ *      ? PathValue<T[Key], Rest>
+ *      : Rest extends keyof T[Key]
+ *      ? T[Key][Rest]
+ *      : never
+ *    ) : never
+ *  ) : (
+ *    P extends keyof T
+ *    ? T[P]
+ *    : never
+ *  )
+ * ) : never} PathValue
+ */
+/**
+ * @template T
+ * @typedef {PathValue<T, PathDT<T>>} PathValueDT
  */
 
 /**
  * @template TAttrs
- * @typedef {{ [K in keyof TAttrs]?: WhereDataDT<TAttrs[K]> }} Where
+ * @template TKey
+ * @typedef {TAttrs extends TAttrs ? Path<Props<TAttrs>, TKey} WherePath
+ */
+/**
+ * @template TAttrs
+ * @typedef {WherePath<TAttrs, keyof TAttrs>} WherePathDT
+ */
+/**
+ * @template TAttrs
+ * @template TPath
+ * @typedef {TAttrs extends Attrs ? PathValue<Props<TAttrs>, TPath> & DataType} WhereValue
+ */
+/**
+ * @template TAttrs
+ * @typedef {TAttrs extends Attrs ? PathValue<Props<TAttrs>, WherePathDT<TAttrs>> & DataType} WhereValueDT
+ */
+
+/**
+ * @template TAttrs
+ * @typedef {{ [K in WherePathDT<TAttrs>]?: WhereColumnDT<WhereValueDT<TAttrs>> }} Where
  */
 
 /**
  * @template TAttrs
  * @template TWhere
  * @typedef {{
- *  [K in keyof TAttrs]?: AttrDataType<TAttrs[K]> | WhereData<TAttrs[K], Extract<TWhere, Where<TAttrs>>[K]['operation']>
+ *  [K in WherePathDT<TAttrs>]?: WhereValue<TAttrs, K> | WhereColumn<WhereValue<TAttrs, K>, Extract<TWhere, Where<TAttrs>>[K]['operation']>
  * }} WhereFilter
  */
 
