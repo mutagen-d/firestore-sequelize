@@ -357,6 +357,11 @@ describe('Collections', () => {
       const json = JSON.stringify(user)
       expect(JSON.parse(json)).toEqual(user.toJSON())
     })
+    test('setId', async () => {
+      const user = await User.findOne({ id: database.users[0].id })
+      user.setId('123')
+      expect(user.getId()).toBe('123')
+    })
   })
   describe('subcollections', () => {
     beforeEach(async () => {
