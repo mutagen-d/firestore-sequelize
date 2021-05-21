@@ -74,9 +74,11 @@ type ColumnDefault<TCol extends Column> = TCol['default'] extends undefined ? Co
  */
 type ColumnDataType<TCol extends Column> = ColumnDefault<TCol> extends ColumnType<TCol> ? ColumnDefault<TCol> : ColumnType<TCol>
 
-type AttrDataType<T extends DataType | Column> = T extends Column ? ColumnDataType<T> : T
+type DataTypeOrColumn = DataType | Column
 
-type AttrColumn<T extends DataType | Column> = T extends Column ? T : Column<T>
+type AttrDataType<T extends DataTypeOrColumn = DataTypeOrColumn> = T extends Column ? ColumnDataType<T> : T
+
+type AttrColumn<T extends DataTypeOrColumn = DataTypeOrColumn> = T extends Column ? T : Column<T>
 
 export type Props<TAttrs extends Attrs> = {
   [K in keyof TAttrs]: AttrDataType<TAttrs[K]>
@@ -120,53 +122,79 @@ type ModelAttrs<TModel> = TModel extends { name: string; __attributes: any } ? T
 
 type ModelOption = { id: string; parentPath?: string }
 
-type WhereAttrs<TWhere extends WhereFilter> = TWhere extends WhereFilter<infer TAttrs> ? Extract<TAttrs, Attrs> : never
-
 export type AttrsColumn<TAttrs extends Attrs> = {
   [K in keyof TAttrs]: AttrColumn<TAttrs[K]>
 }
 
-type DataTypeOrColumn = DataType | Column
-
 type WhereOperationTypeA = 'array-contains' | 'array-contains-any'
 type WhereOperationTypeI = 'in' | 'not-in'
 
-type WhereData<T extends DataTypeOrColumn, TOp extends WhereFilterOp = WhereFilterOp> = AttrColumn<T>['type'] extends 'array'
+type WhereColumn<TADataType extends AttrDataType, TOp extends WhereFilterOp = WhereFilterOp> = TADataType extends Array<any>
 ? (
   TOp extends 'array-contains'
   ? {
-    value: AttrDataType<T> extends Array<any> ? AttrDataType<T>[number] : never
+    value: TADataType extends Array<any> ? TADataType[number] : never
     operation: TOp
   }
   : TOp extends WhereOperationTypeI
   ? never
   : {
-    value: AttrDataType<T>
-    operation?: TOp
+    value: TADataType
+    operation: TOp
   }
 ) : (
   TOp extends WhereOperationTypeA
   ? never
   : TOp extends WhereOperationTypeI
   ? {
-    value: AttrDataType<T>[]
+    value: TADataType[]
     operation: TOp
   } : {
-    value: AttrDataType<T>
+    value: TADataType
     operation?: TOp
   }
 )
 
+type WherePath<TAttrs extends Attrs = Attrs, TKey extends keyof TAttrs = keyof TAttrs> = Path<Props<TAttrs>, TKey>
+
+type WhereValue<TAttrs extends Attrs = Attrs, TPath extends WherePath<TAttrs> = WherePath<TAttrs>> = PathValue<Props<TAttrs>, TPath> & DataType
+
 type Where<TAttrs extends Attrs> = {
-  [K in keyof TAttrs]?: WhereData<TAttrs[K]>
+  [K in WherePath<TAttrs>]?: WhereColumn<WhereValue<TAttrs, K>>
 }
 
 type WhereFilter<TAttrs extends Attrs = Attrs, TWhere extends Where<TAttrs> = Where<TAttrs>> = {
-  [K in keyof TAttrs]?: AttrDataType<TAttrs[K]> | WhereData<TAttrs[K], TWhere[K]['operation']>
+  [K in WherePath<TAttrs>]?: WhereValue<TAttrs, K> | WhereColumn<WhereValue<TAttrs, K>, TWhere[K]['operation']>
 }
 
+type Path<T, Key extends keyof T = keyof T> = Key extends string
+? (
+  T[Key] extends Record<string, any>
+  ? (
+    `${Key}.${Path<T[Key], Exclude<keyof T[Key], keyof Array<unknown>>> & string}`
+    | `${Key}.${Exclude<keyof T[Key], keyof Array<unknown>> & string}`
+    | Key
+  ) : Key
+) : never
+
+type PathValue<T, P extends Path<T>> = P extends `${infer Key}.${infer Rest}`
+? (
+  Key extends keyof T
+  ? (
+    Rest extends Path<T[Key]>
+    ? PathValue<T[Key], Rest>
+    : Rest extends keyof T[Key]
+    ? T[Key][Rest]
+    : never
+  ) : never
+) : (
+  P extends keyof T
+  ? T[P]
+  : never
+)
+
 type NormalizedWhereFilter<TAttrs extends Attrs, TWhere extends WhereFilter<TAttrs>> = {
-  [K in keyof TAttrs]: TWhere[K] extends AttrDataType<TAttrs[K]> ? { value: TWhere[K]; operation: '==' } : Required<TWhere[K]>
+  [K in WherePath<TAttrs>]: TWhere[K] extends AttrDataType<TAttrs[K]> ? { value: TWhere[K]; operation: '==' } : Required<TWhere[K]>
 }
 type ParentOption = { parentPath?: string }
 
