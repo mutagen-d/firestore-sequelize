@@ -133,7 +133,7 @@ const DataTypes = {
  * @typedef {import('@google-cloud/firestore').DocumentSnapshot} DocumentSnapshot
  * @typedef {import('@google-cloud/firestore').QuerySnapshot} QuerySnapshot
  * @typedef {import('@google-cloud/firestore').DocumentReference} DocumentReference
- * @typedef {import('@google-cloud/firestore').WhereFilterOp} WhereFilterOp
+ * @typedef {import('@google-cloud/firestore').WhereFilterOp} WhereOperationType
  * @typedef {import('@google-cloud/firestore').OrderByDirection} OrderByDirection
  * @typedef {import('@google-cloud/firestore').FieldPath} FieldPath
  * @typedef {import('@google-cloud/firestore').QueryDocumentSnapshot} QueryDocumentSnapshot
@@ -206,7 +206,6 @@ const DataTypes = {
  * }} AttrsColumn
  */
 
-
 /**
  * @typedef {DataType | ColumnDT} DataTypeOrColumn
  */
@@ -218,50 +217,34 @@ const DataTypes = {
 
 /**
  * @template TADataType
- * @template TOp
- * @typedef {TADataType extends Array<any>
- * ? (
- *  TOp extends 'array-contains'
- *  ? {
- *    value: TADataType extends Array<any> ? TADataType[number] : never
- *    operation: TOp
- *  }
- *  : TOp extends WhereOperationTypeI
- *  ? never
- *  : {
- *    value: TADataType
- *    operation?: TOp
- *  }
- * ) : (
- *  TOp extends WhereOperationTypeA
- *  ? never
- *  : TOp extends WhereOperationTypeI
- *  ? {
- *    value: TADataType[]
- *    operation: TOp
- *  }
- *  : {
- *    value: TADataType
- *    operation?: TOp
- *  }
- * )
- * } WhereColumn
+ * @typedef {TADataType extends AttrDataType<DataTypeOrColumn>
+ * ? (TADataType extends Array<any>
+ *  ? (
+ *    { 'array-contains'?: TADataType extends Array<any> ? TADataType[number] : never }
+ *    & { 'array-contains-any'?: TADataType extends Array<any> ? TADataType[number][] : never }
+ *  ) : (
+ *    { [Op in WhereOperationTypeI]?: TADataType[] }
+ *    & { [Op in Exclude<WhereOperationType, WhereOperationTypeA | WhereOperationTypeI>]?: TADataType }
+ *  )
+ * ) : never} WhereColumn
  */
+
 /**
  * @template T
- * @typedef {WhereColumn<T, WhereFilterOp>} WhereColumnDT
+ * @typedef {T extends Array<any> ? Exclude<keyof T, keyof Array<any>> : keyof T} __keyof__ExcludeArrayKeys__
  */
 
 /**
  * @template T
  * @template Key
  * @typedef {Key extends keyof T
- * ? (Key extends string
+ * ? (
+ *  Key extends string
  *  ? (
  *    T[Key] extends Record<string, any>
  *    ? (
- *      `${Key}.${Path<T[Key], Exclude<keyof T[Key], keyof Array<unknown>>> & string}`
- *      | `${Key}.${Exclude<keyof T[Key], keyof Array<unknown>> & string}`
+ *      `${Key}.${Path<T[Key], __keyof__ExcludeArrayKeys__<T[Key]>>}`
+ *      | `${Key}.${__keyof__ExcludeArrayKeys__<T[Key]>}`
  *      | Key
  *    ) : Key
  *  ) : never
@@ -275,12 +258,12 @@ const DataTypes = {
 /**
  * @template T
  * @template P
- * @typedef {P extends Path<T>
+ * @typedef {P extends PathDT<T>
  * ? (P extends `${infer Key}.${infer Rest}`
  *  ? (
  *    Key extends keyof T
  *    ? (
- *      Rest extends Path<T[Key]>
+ *      Rest extends PathDT<T[Key]>
  *      ? PathValue<T[Key], Rest>
  *      : Rest extends keyof T[Key]
  *      ? T[Key][Rest]
@@ -301,7 +284,7 @@ const DataTypes = {
 /**
  * @template TAttrs
  * @template TKey
- * @typedef {TAttrs extends TAttrs ? Path<Props<TAttrs>, TKey} WherePath
+ * @typedef {TAttrs extends TAttrs ? Path<Props<TAttrs>, TKey> : never} WherePath
  */
 /**
  * @template TAttrs
@@ -310,36 +293,30 @@ const DataTypes = {
 /**
  * @template TAttrs
  * @template TPath
- * @typedef {TAttrs extends Attrs ? PathValue<Props<TAttrs>, TPath> & DataType} WhereValue
+ * @typedef {TAttrs extends Attrs ? PathValue<Props<TAttrs>, TPath> : never} WhereValue
  */
 /**
  * @template TAttrs
- * @typedef {TAttrs extends Attrs ? PathValue<Props<TAttrs>, WherePathDT<TAttrs>> & DataType} WhereValueDT
- */
-
-/**
- * @template TAttrs
- * @typedef {{ [K in WherePathDT<TAttrs>]?: WhereColumnDT<WhereValueDT<TAttrs>> }} Where
+ * @typedef {PathValue<Props<TAttrs>, WherePathDT<TAttrs>>} WhereValueDT
  */
 
 /**
  * @template TAttrs
- * @template TWhere
+ * @typedef {{ [K in WherePathDT<TAttrs>]?: WhereColumn<WhereValue<TAttrs, K>> }} Where
+ */
+
+/**
+ * @template TAttrs
  * @typedef {{
- *  [K in WherePathDT<TAttrs>]?: WhereValue<TAttrs, K> | WhereColumn<WhereValue<TAttrs, K>, Extract<TWhere, Where<TAttrs>>[K]['operation']>
+ *  [K in WherePathDT<TAttrs>]?: WhereValue<TAttrs, K> | WhereColumn<WhereValue<TAttrs, K>>
  * }} WhereFilter
  */
 
 /**
  * @template TAttrs
- * @typedef {WhereFilter<TAttrs, Where<TAttrs>>} WhereFilterDT
- */
-
-/**
- * @template TAttrs
  * @template TWhere
  * @typedef {{
- *  [K in keyof TAttrs]: TWhere[K] extends AttrDataType<TAttrs[K]> ? { value: TWhere[K]; operation: '==' } : Required<TWhere[K]>
+ *  [K in WherePathDT<TAttrs>]: TWhere[K] extends WhereValue<TAttrs, K> ? { '==': TWhere[K] } : Required<TWhere[K]>
  * }} NormalizedWhereFilter
  */
 
@@ -357,7 +334,7 @@ const DataTypes = {
  * @template TAttrs
  * @typedef {{
  *  ids?: string[]
- *  where?: WhereFilterDT<TAttrs>
+ *  where?: WhereFilter<TAttrs>
  *  order?: OrderFilter<TAttrs>[]
  *  limit?: number
  *  offset?: number
@@ -428,7 +405,7 @@ const DataTypes = {
  *  sync(opts?: Omit<FilterOption<TAttrs>, 'id'> & { setModel?: boolean }): Promise<Model<TAttrs, TSubs>[]>
  *  formatData(model: OptionalProps<TAttrs>): Props<TAttrs>
  *  subcollectionNames(opts?: DestroyOption<TSubs>): ModelItemName<TSubs>[]
- *  normalizeWhereFilter<TWhere extends WhereFilterDT<TAttrs>>(where: TWhere | WhereFilterDT<TAttrs>): NormalizedWhereFilter<TAttrs, TWhere>
+ *  normalizeWhereFilter<TWhere extends WhereFilter<TAttrs>>(where: TWhere | WhereFilter<TAttrs>): NormalizedWhereFilter<TAttrs, TWhere>
  *  buildQuery(collection: CollectionReference, opts: Filter<TAttrs>): Query
  * }} ModelConstructor
  * 
@@ -441,7 +418,7 @@ const DataTypes = {
  * }} CreationOptions
  */
 
-/** @type {WhereFilterOp[]} */
+/** @type {WhereOperationType[]} */
 const WhereOperations = [
   '==',
   '!=',
