@@ -618,7 +618,10 @@ function defineModel(name, attributes, options = {}) {
     /** @type {NormalizedWhereFilter<TWhere>} */
     const res = {}
     for (const field in where) {
-      if (typeof where[field] == 'object' && where[field] !== null && Object.keys(where[field]).every(key => WhereOperations.indexOf(key) != -1)) {
+      if (Array.isArray(where[field])) {
+        const [path, column] = where[field]
+        res[path] = { ...res[path], ...column }
+      } else if (typeof where[field] == 'object' && where[field] !== null && Object.keys(where[field]).every(key => WhereOperations.indexOf(key) != -1)) {
         res[field] = where[field]
       } else {
         res[field] = {

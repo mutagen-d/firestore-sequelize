@@ -146,8 +146,8 @@ type Path<T, Key extends keyof T = keyof T> = Key extends string
   ? (
     `${Key}.${Path<T[Key], __keyof__ExcludeArrayKeys__<T[Key]>> & string}`
     | `${Key}.${__keyof__ExcludeArrayKeys__<T[Key]> & string}`
-    | Key
-  ) : Key
+    | `${Key}`
+  ) : `${Key}`
 ) : never
 
 type PathValue<T, P extends Path<T>> = P extends `${infer Key}.${infer Rest}`
@@ -166,9 +166,43 @@ type PathValue<T, P extends Path<T>> = P extends `${infer Key}.${infer Rest}`
   : never
 )
 
+type PathKey<Key extends string | number, K extends string = undefined> = K extends undefined ? `${Key}` : `${K}.${Key}`
+
+type TupleBase<T, P extends Path<T>, V extends PathValue<T, P> = PathValue<T, P>> = V extends Array<any>
+? (
+  [P, {
+    'array-contains'?: V[number]
+    'array-contains-any'?: V[number][]
+  }]
+) : (
+  [P, {
+    [K in 'in' | 'not-in']?: V[]
+  } & {
+    [K in Exclude<WhereOperationType, WhereOperationTypeA | WhereOperationTypeI>]?: V
+  }]
+)
+
+type Tuple<T, P extends Path<T>, K extends string = undefined, O = T> = P extends `${infer Key}.${infer Rest}`
+? (
+  Key extends keyof T
+  ? (
+    Rest extends Path<T[Key]>
+    ? Tuple<T[Key], Rest, PathKey<Key, K>, O>
+    : Rest extends keyof T[Key]
+    ? TupleBase<O, PathKey<Rest, K> & Path<O>>
+    : never
+  ) : never
+) : (
+  P extends keyof T
+  ? TupleBase<O, PathKey<P, K> & Path<O>>
+  : never
+)
+
 type WherePath<TAttrs extends Attrs = Attrs> = Path<Props<TAttrs>>
 
 type WhereValue<TAttrs extends Attrs = Attrs, TPath extends WherePath<TAttrs> = WherePath<TAttrs>> = PathValue<Props<TAttrs>, TPath>
+
+type WhereTuple<TAttrs extends Attrs> = Tuple<Props<TAttrs>, WherePath<TAttrs>>
 
 type Where<TAttrs extends Attrs> = {
   [K in WherePath<TAttrs>]?: WhereColumn<WhereValue<TAttrs, K>>
@@ -185,11 +219,11 @@ type ParentOption = { parentPath?: string }
 
 type DestroyOption<TSubs extends ArrayLike<{ name: string }>> = { ignoreSubcollections?: boolean | ModelItemName<TSubs>[] }
 
-type OrderFilter<TAttrs extends Attrs> = [keyof TAttrs | FieldPath, OrderByDirection]
+type OrderFilter<TAttrs extends Attrs> = [WherePath<TAttrs> | FieldPath, OrderByDirection]
 
 export type Filter<TAttrs extends Attrs> = {
   ids?: string[]
-  where?: WhereFilter<TAttrs>
+  where?: WhereFilter<TAttrs> | Array<WhereTuple<TAttrs>>
   order?: OrderFilter<TAttrs>[]
   limit?: number
   offset?: number
