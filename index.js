@@ -441,6 +441,20 @@ const DataTypes = {
  * }} CreationOptions
  */
 
+/** @type {WhereFilterOp[]} */
+const WhereOperations = [
+  '==',
+  '!=',
+  '<',
+  '<=',
+  '>',
+  '>=',
+  'in',
+  'not-in',
+  'array-contains',
+  'array-contains-any',
+]
+
 /**
  * @template TName
  * @template TAttrs
@@ -601,8 +615,9 @@ function defineModel(name, attributes, options = {}) {
     if (opts.where) {
       const where = Model.normalizeWhereFilter(opts.where)
       for (const field in where) {
-        const { operation, value } = where[field]
-        query = query.where(field, operation, value)
+        for (const operation in where[field]) {
+          query = query.where(field, operation, where[field][operation])
+        }
       }
     }
     if (opts.order) {
@@ -626,19 +641,12 @@ function defineModel(name, attributes, options = {}) {
     /** @type {NormalizedWhereFilter<TWhere>} */
     const res = {}
     for (const field in where) {
-      /** @type {WhereFilterOp} */
-      let operation
-      let value
-      if (where[field] && where[field].operation) {
-        operation = where[field].operation
-        value = where[field].value
+      if (typeof where[field] == 'object' && where[field] !== null && Object.keys(where[field]).every(key => WhereOperations.indexOf(key) != -1)) {
+        res[field] = where[field]
       } else {
-        operation = '=='
-        value = typeof where[field] == 'object' && typeof where[field].value != 'undefined' ? where[field].value : where[field]
-      }
-      res[field] = {
-        operation,
-        value,
+        res[field] = {
+          '==': where[field]
+        }
       }
     }
     return res

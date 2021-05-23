@@ -1,4 +1,4 @@
-import { DocumentReference, FieldPath, OrderByDirection, WhereFilterOp, WriteResult, CollectionReference, Query, FieldValue } from "@google-cloud/firestore"
+import { DocumentReference, FieldPath, OrderByDirection, WhereFilterOp as WhereOperationType, WriteResult, CollectionReference, Query, FieldValue } from "@google-cloud/firestore"
 import * as Admin from "firebase-admin"
 
 export function initializeApp(admin: typeof Admin): void
@@ -129,50 +129,23 @@ export type AttrsColumn<TAttrs extends Attrs> = {
 type WhereOperationTypeA = 'array-contains' | 'array-contains-any'
 type WhereOperationTypeI = 'in' | 'not-in'
 
-type WhereColumn<TADataType extends AttrDataType, TOp extends WhereFilterOp = WhereFilterOp> = TADataType extends Array<any>
+type WhereColumn<TADataType extends AttrDataType> = TADataType extends Array<any>
 ? (
-  TOp extends 'array-contains'
-  ? {
-    value: TADataType extends Array<any> ? TADataType[number] : never
-    operation: TOp
-  }
-  : TOp extends WhereOperationTypeI
-  ? never
-  : {
-    value: TADataType
-    operation: TOp
-  }
+  { 'array-contains'?: TADataType extends Array<any> ? TADataType[number] : never }
+  & { 'array-contains-any'?: TADataType extends Array<any> ? TADataType[number][] : never }
 ) : (
-  TOp extends WhereOperationTypeA
-  ? never
-  : TOp extends WhereOperationTypeI
-  ? {
-    value: TADataType[]
-    operation: TOp
-  } : {
-    value: TADataType
-    operation?: TOp
-  }
+  { [Op in WhereOperationTypeI]?: TADataType[] }
+  & { [Op in Exclude<WhereOperationType, WhereOperationTypeA | WhereOperationTypeI>]?: TADataType }
 )
 
-type WherePath<TAttrs extends Attrs = Attrs, TKey extends keyof TAttrs = keyof TAttrs> = Path<Props<TAttrs>, TKey>
-
-type WhereValue<TAttrs extends Attrs = Attrs, TPath extends WherePath<TAttrs> = WherePath<TAttrs>> = PathValue<Props<TAttrs>, TPath> & DataType
-
-type Where<TAttrs extends Attrs> = {
-  [K in WherePath<TAttrs>]?: WhereColumn<WhereValue<TAttrs, K>>
-}
-
-type WhereFilter<TAttrs extends Attrs = Attrs, TWhere extends Where<TAttrs> = Where<TAttrs>> = {
-  [K in WherePath<TAttrs>]?: WhereValue<TAttrs, K> | WhereColumn<WhereValue<TAttrs, K>, TWhere[K]['operation']>
-}
+type __keyof__ExcludeArrayKeys__<T> = T extends Array<any> ? Exclude<keyof T, keyof Array<any>> : keyof T
 
 type Path<T, Key extends keyof T = keyof T> = Key extends string
 ? (
   T[Key] extends Record<string, any>
   ? (
-    `${Key}.${Path<T[Key], Exclude<keyof T[Key], keyof Array<unknown>>> & string}`
-    | `${Key}.${Exclude<keyof T[Key], keyof Array<unknown>> & string}`
+    `${Key}.${Path<T[Key], __keyof__ExcludeArrayKeys__<T[Key]>> & string}`
+    | `${Key}.${__keyof__ExcludeArrayKeys__<T[Key]> & string}`
     | Key
   ) : Key
 ) : never
@@ -193,8 +166,20 @@ type PathValue<T, P extends Path<T>> = P extends `${infer Key}.${infer Rest}`
   : never
 )
 
+type WherePath<TAttrs extends Attrs = Attrs> = Path<Props<TAttrs>>
+
+type WhereValue<TAttrs extends Attrs = Attrs, TPath extends WherePath<TAttrs> = WherePath<TAttrs>> = PathValue<Props<TAttrs>, TPath>
+
+type Where<TAttrs extends Attrs> = {
+  [K in WherePath<TAttrs>]?: WhereColumn<WhereValue<TAttrs, K>>
+}
+
+type WhereFilter<TAttrs extends Attrs = Attrs> = {
+  [K in WherePath<TAttrs>]?: WhereValue<TAttrs, K> | WhereColumn<WhereValue<TAttrs, K>>
+}
+
 type NormalizedWhereFilter<TAttrs extends Attrs, TWhere extends WhereFilter<TAttrs>> = {
-  [K in WherePath<TAttrs>]: TWhere[K] extends AttrDataType<TAttrs[K]> ? { value: TWhere[K]; operation: '==' } : Required<TWhere[K]>
+  [K in WherePath<TAttrs>]: TWhere[K] extends WhereValue<TAttrs, K> ? { '==': TWhere[K] } : Required<TWhere[K]>
 }
 type ParentOption = { parentPath?: string }
 
