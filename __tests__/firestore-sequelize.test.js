@@ -87,8 +87,8 @@ describe('Collections', () => {
         ids: database.users.map(u => u.id),
         where: {
           coins: {
-            operation: '>=',
-            value: 7,
+            '>=': 7,
+            '<': 20,
           },
         },
         limit: 10,
@@ -96,6 +96,7 @@ describe('Collections', () => {
       })
       expect(mockCollection).toHaveBeenCalledWith('users')
       expect(mockWhere).toHaveBeenCalledWith('coins', '>=', 7)
+      expect(mockWhere).toHaveBeenCalledWith('coins', '<', 20)
       expect(mockLimit).toHaveBeenCalledWith(10)
       expect(mockOffset).toHaveBeenCalledWith(4)
     })
@@ -229,14 +230,14 @@ describe('Collections', () => {
       expect(mockGet).toHaveBeenCalled()
     })
     test('by using where clause', async () => {
-      const users = await User.findAll({ where: { coins: { operation: '>', value: 10 } } })
+      const users = await User.findAll({ where: { coins: { '>': 10 } } })
       expect(mockCollection).toHaveBeenCalledWith('users')
       expect(mockWhere).toHaveBeenCalledWith('coins', '>', 10)
       expect(mockGet).toHaveBeenCalled()
     })
     test('ordered list', async () => {
       const users = await User.findAll({
-        where: { coins: { operation: '>', value: 10 } },
+        where: { coins: { '>': 10 } },
         order: [['name']],
         limit: 10,
         offset: 20,
@@ -305,7 +306,7 @@ describe('Collections', () => {
     test('by where clause', async () => {
       const res = await User.destroy({
         where: {
-          coins: { operation: '<', value: 10 },
+          coins: { '<': 10 },
         },
       })
       expect(mockCollection).toHaveBeenCalledWith('users')
