@@ -305,9 +305,9 @@ describe('Collections', () => {
     })
     test('by where clause', async () => {
       const res = await User.destroy({
-        where: {
-          coins: { '<': 10 },
-        },
+        where: [
+          ['coins', { '<': 10 }],
+        ],
       })
       expect(mockCollection).toHaveBeenCalledWith('users')
       expect(mockWhere).toHaveBeenCalledWith('coins', '<', 10)
