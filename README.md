@@ -46,6 +46,9 @@ const User = defineModel("users", {
     default: false,
   },
   coins: 0,
+  years: {
+    type: 'number',
+  },
 });
 
 // Subcollections
@@ -103,6 +106,7 @@ Create record
 const user = await User.create({
   login: "john",
   name: "John Doe" ,
+  years: 40,
   email: "john.doe@example.com",
   admin: false,
 });
@@ -113,6 +117,7 @@ const user = new User({
   login: "john",
   name: "John Doe",
   email: "john.doe@example.com",
+  years: 40,
   admin: false,
 }, {
   id: 'john',
@@ -129,7 +134,12 @@ const user = await User.findOne({
 Find using where
 ```javascript
 const user = await User.findOne({
-  where: { login: "john" },
+  where: {
+    years: {
+      '>': 20,
+      '<=': 50,
+    },
+  },
 })
 ```
 ### `findOrCreate`
@@ -283,7 +293,7 @@ Find all photos using user instance
 ```javascript
 const photos = await user.collectionFindAll('photos', {
   where: {
-    name: { value: 'photo', operation: '>=' },
+    name: { '>=': 'photo' },
   }
 })
 ```
