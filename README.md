@@ -166,10 +166,18 @@ const users = await User.findAll({
 Find all users by ids ordered by name
 ```javascript
 const users = await User.findAll({
-  ids: [
+  id: [
     "e855cafd-6578-441d-afb8-efc37de90b8f",
     "776b0026-aff0-48c2-a952-69619d7578c4",
   ],
+  order: [["name"]],
+})
+// or
+const users = await User.findAll({
+  id: {
+    '>': '12bc',
+    '<': 'def',
+  },
   order: [["name"]],
 })
 ```
