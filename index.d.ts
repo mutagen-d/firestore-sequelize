@@ -222,7 +222,7 @@ type DestroyOption<TSubs extends ArrayLike<{ name: string }>> = { ignoreSubcolle
 type OrderFilter<TAttrs extends Attrs> = [WherePath<TAttrs> | FieldPath, OrderByDirection]
 
 export type Filter<TAttrs extends Attrs> = {
-  ids?: string[]
+  id?: string | string[] | WhereColumn<string>
   where?: WhereFilter<TAttrs> | Array<WhereTuple<TAttrs>>
   order?: OrderFilter<TAttrs>[]
   limit?: number
@@ -240,8 +240,8 @@ type SubsMethods<TSubs extends ArrayLike<{ name: string }>> = {
   collectionDrop<TName extends ModelItemName<TSubs>>(name: TName, opts: ParentOption & DestroyOption<TSubs>): ReturnType<ModelItem<TSubs, TName>['destroy']>
   collectionFindOne<TName extends ModelItemName<TSubs>>(name: TName, opts?: Omit<FilterOption<ModelAttrs<ModelItem<TSubs, TName>>>, 'parentPath'>): ReturnType<ModelItem<TSubs, TName>['findOne']>
   collectionFindOrCreate<TName extends ModelItemName<TSubs>>(name: TName, opts?: Omit<FilterOption<ModelAttrs<ModelItem<TSubs, TName>>>, 'parentPath'> & { defaults?: ModelInput<ModelItem<TSubs, TName>> }): ReturnType<ModelItem<TSubs, TName>['findOrCreate']>
-  collectionFindAll<TName extends ModelItemName<TSubs>>(name: TName, opts?: Omit<FilterOption<ModelAttrs<ModelItem<TSubs, TName>>>, 'parentPath' | 'id'>): ReturnType<ModelItem<TSubs, TName>['findAll']>
-  collectionSync<TName extends ModelItemName<TSubs>>(name: TName, opts?: Omit<FilterOption<ModelAttrs<ModelItem<TSubs, TName>>>, 'parentPath' | 'id'>): ReturnType<ModelItem<TSubs, TName>['sync']>
+  collectionFindAll<TName extends ModelItemName<TSubs>>(name: TName, opts?: Omit<FilterOption<ModelAttrs<ModelItem<TSubs, TName>>>, 'parentPath'>): ReturnType<ModelItem<TSubs, TName>['findAll']>
+  collectionSync<TName extends ModelItemName<TSubs>>(name: TName, opts?: Omit<FilterOption<ModelAttrs<ModelItem<TSubs, TName>>>, 'parentPath'>): ReturnType<ModelItem<TSubs, TName>['sync']>
 }
 
 export type Model<TAttrs extends Attrs = Attrs, TSubs extends ArrayLike<{ name: string }> = DefaultModelConstructor[]> = Props<TAttrs> & SubsMethods<TSubs> & {
@@ -272,9 +272,9 @@ export type ModelConstructor<TName extends string = string, TAttrs extends Attrs
   drop(opts: ParentOption & DestroyOption<TSubs>): Promise<WriteResult[]>
   findOne(opts?: FilterOption<TAttrs>): Promise<Model<TAttrs, TSubs>>
   findOrCreate(opts?: FilterOption<TAttrs> & { defaults?: OptionalProps<TAttrs> }): Promise<[Model<TAttrs, TSubs>, boolean]>
-  findAll(opts?: Omit<FilterOption<TAttrs>, 'id'>): Promise<Model<TAttrs, TSubs>[]>
+  findAll(opts?: FilterOption<TAttrs>): Promise<Model<TAttrs, TSubs>[]>
   docIds(opts?: FilterOption<TAttrs>): Promise<Model<TAttrs, TSubs>[]>
-  sync(opts?: Omit<FilterOption<TAttrs>, 'id'> & { setModel?: boolean }): Promise<Model<TAttrs, TSubs>[]>
+  sync(opts?: FilterOption<TAttrs> & { setModel?: boolean }): Promise<Model<TAttrs, TSubs>[]>
   formatData(model: OptionalProps<TAttrs>): Props<TAttrs>
   subcollectionNames(opts?: { ignoreSubcollections?: boolean | ModelItemName<TSubs>[] }): ModelItemName<TSubs>[]
   normalizeWhereFilter<TWhere extends WhereFilter<TAttrs>>(where: TWhere | WhereFilter<TAttrs>): NormalizedWhereFilter<TAttrs, TWhere>
