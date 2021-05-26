@@ -333,7 +333,7 @@ const DataTypes = {
 /**
  * @template TAttrs
  * @typedef {{
- *  ids?: string[]
+ *  id?: string | string[] | WhereColumn<string>
  *  where?: WhereFilter<TAttrs>
  *  order?: OrderFilter<TAttrs>[]
  *  limit?: number
@@ -586,8 +586,12 @@ function defineModel(name, attributes, options = {}) {
    */
   Model.buildQuery = function buildQuery(collection, opts) {
     let query = collection
-    if (Array.isArray(opts.ids) && opts.ids.length > 0) {
-      query = query.where(admin.firestore.FieldPath.documentId(), 'in', opts.ids)
+    if (Array.isArray(opts.id) && opts.id.length > 0) {
+      query = query.where(admin.firestore.FieldPath.documentId(), 'in', opts.id)
+    } else if (!Array.isArray(opts.id) && typeof opts.id == 'object' && opts.id && Object.keys(opts.id).length > 0) {
+      for (const operation in opts.id) {
+        query = query.where(admin.firestore.FieldPath.documentId(), operation, opts.id[operation])
+      }
     }
     if (opts.where) {
       const where = Model.normalizeWhereFilter(opts.where)
@@ -673,11 +677,11 @@ function defineModel(name, attributes, options = {}) {
   }
   /**
    * @param {UpdateProps<TAttrs>} model 
-   * @param {{ id?: string; parentPath?: string } & Filter<TAttrs>} [opts]
+   * @param {{ id?: string | string[] | WhereColumn<string>; parentPath?: string } & Filter<TAttrs>} [opts]
    */
   Model.update = function (model, opts = {}) {
     const collection = admin.firestore().collection(Model.path(opts.parentPath))
-    if (typeof opts.id != 'undefined') {
+    if (typeof opts.id == 'string') {
       return collection.doc(opts.id).update(Model.filterData(model))
     }
     const query = Model.buildQuery(collection, opts)
@@ -701,20 +705,24 @@ function defineModel(name, attributes, options = {}) {
     })
   }
   /**
-   * @param {{ id?: string; parentPath?: string; force?: boolean; ignoreSubcollections?: boolean | ModelItemName<TSubs>[] } & Filter<TAttrs>} opts
+   * @param {{ parentPath?: string; force?: boolean; ignoreSubcollections?: boolean | ModelItemName<TSubs>[] } & Filter<TAttrs>} opts
    */
   Model.destroy = function (opts) {
     const collection = admin.firestore().collection(Model.path(opts.parentPath))
-    if (typeof opts.id != 'undefined') {
+    if (typeof opts.id == 'string') {
       return collection.doc(opts.id).delete()
-    }
-    if (
+    } else if (
       !opts.force
       && (
-        !Array.isArray(opts.ids)
-        || opts.ids.length == 0
+        Array.isArray(opts.id)
+          ? opts.id.length == 0
+          : (
+            !opts.id
+            || Object.keys(opts.id).length == 0
+          )
       ) && (
-        !opts.where || Object.keys(opts.where).length == 0
+        !opts.where
+        || Object.keys(opts.where).length == 0
       )
     ) {
       throw new Error(`You are trying to delete all records in Collection "${collection.path}"`)
@@ -756,11 +764,11 @@ function defineModel(name, attributes, options = {}) {
     }
   }
   /**
-   * @param {{ id?: string; parentPath?: string } & Filter<TAttrs>} [opts]
+   * @param {{ parentPath?: string } & Filter<TAttrs>} [opts]
    */
   Model.findOne = function (opts = {}) {
     const collection = admin.firestore().collection(Model.path(opts.parentPath))
-    if (typeof opts.id != 'undefined') {
+    if (typeof opts.id == 'string') {
       return collection.doc(opts.id).get().then(res => {
         return res.exists ? new Model(res.data(), { id: opts.id, parentPath: opts.parentPath }) : null
       })
@@ -771,11 +779,11 @@ function defineModel(name, attributes, options = {}) {
     })
   }
   /**
-   * @param {{ id?: string; parentPath?: string; defaults?: OptionalProps<TAttrs> } & Filter<TAttrs>} [opts]
+   * @param {{ parentPath?: string; defaults?: OptionalProps<TAttrs> } & Filter<TAttrs>} [opts]
    */
   Model.findOrCreate = function (opts) {
     const collection = admin.firestore().collection(Model.path(opts.parentPath))
-    if (typeof opts.id != 'undefined') {
+    if (typeof opts.id == 'string') {
       return collection.doc(opts.id).get().then(res => {
         if (res.exists) {
           return [new Model(res.data(), { id: opts.id, parentPath: opts.parentPath }), false]
