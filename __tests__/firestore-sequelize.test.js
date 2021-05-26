@@ -224,15 +224,17 @@ describe('Collections', () => {
     })
     test('by ids', async () => {
       const ids = database.users.map(u => u.id)
-      const users = await User.findAll({ ids })
+      const users = await User.findAll({ id: ids })
       expect(mockCollection).toHaveBeenCalledWith('users')
       expect(mockWhere).toHaveBeenCalledWith(admin.firestore.FieldPath.documentId(), 'in', ids)
       expect(mockGet).toHaveBeenCalled()
     })
     test('by using where clause', async () => {
-      const users = await User.findAll({ where: { coins: { '>': 10 } } })
+      const ids = database.users.map(u => u.id)
+      const users = await User.findAll({ where: { coins: { '>': 10 } }, id: { 'in': ids } })
       expect(mockCollection).toHaveBeenCalledWith('users')
       expect(mockWhere).toHaveBeenCalledWith('coins', '>', 10)
+      expect(mockWhere).toHaveBeenCalledWith(admin.firestore.FieldPath.documentId(), 'in', ids)
       expect(mockGet).toHaveBeenCalled()
     })
     test('ordered list', async () => {
