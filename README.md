@@ -1,7 +1,7 @@
 # Firestore Sequelize
 [![Build Status](https://travis-ci.org/mutagen-d/firestore-sequelize.svg?branch=master)](https://travis-ci.org/mutagen-d/firestore-sequelize)
 
-Inspired by [firestore-sequelizer](https://github.com/CaioFilus/firestore-sequelizer)
+A simple Sequelize like ORM for Firestore
 # Simple Firebase ORM
 If you like to use Sequelize and use models in your backend projects try to use FirestoreSequelize, some features:
   - Create Models for your Collections;
@@ -99,6 +99,48 @@ const Team = defineModel("teams", {
 | `ref`                                       | `DocumentReference`                                   |
 | `path`                                      | `string`                                              |
 
+## Filtering
+### `where` clauses
+Use standard firestore operations `==`, `>`, `>=`, `<`, `<=`, `!=`, `in`, `not-in`, `array-contains`, `array-contains-any`
+```javascript
+const users = await User.findAll({
+  where: {
+    years: {
+      '>': 10,
+      '<=': 40,
+    },
+  },
+})
+```
+### `id` clauses
+Use `id` clauses to filter by `documentId`
+```javascript
+const users = await User.findAll({
+  id: {
+    'not-in': [
+      'e855cafd-6578-441d-afb8-efc37de90b8f',
+      '776b0026-aff0-48c2-a952-69619d7578c4',
+    ],
+  },
+})
+```
+You can combine `id` and `where` clauses
+```javascript
+const users = await User.findAll({
+  where: {
+    years: {
+      '>': 10,
+      '<=': 40,
+    },
+  },
+  id: {
+    'not-in': [
+      'e855cafd-6578-441d-afb8-efc37de90b8f',
+      '776b0026-aff0-48c2-a952-69619d7578c4',
+    ],
+  },
+})
+```
 ## CRUD operations
 ### `create`
 Create record
