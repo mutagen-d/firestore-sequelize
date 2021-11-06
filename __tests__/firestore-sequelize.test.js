@@ -295,7 +295,7 @@ describe('Collections', () => {
       })
       user.avatar_url = ''
       await user.save()
-      expect(mockUpdate).toHaveBeenCalledWith(User.formatData(user.data))
+      expect(mockUpdate).toHaveBeenCalledWith(User.formatData(user.getData()))
     })
   })
   describe('destroy', () => {
