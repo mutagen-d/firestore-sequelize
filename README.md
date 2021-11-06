@@ -1,5 +1,5 @@
 # Firestore Sequelize
-[![Build Status](https://travis-ci.com/mutagen-d/firestore-sequelize.svg?branch=master)](https://travis-ci.com/mutagen-d/firestore-sequelize)
+[![Build Status](https://app.travis-ci.com/mutagen-d/firestore-sequelize.svg?branch=master)](https://app.travis-ci.com/github/mutagen-d/firestore-sequelize)
 
 A simple Sequelize like ORM for Firestore
 # Simple Firebase ORM
