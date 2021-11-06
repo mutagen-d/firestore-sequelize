@@ -246,7 +246,7 @@ type SubsMethods<TSubs extends ArrayLike<{ name: string }>> = {
 
 export type Model<TAttrs extends Attrs = Attrs, TSubs extends ArrayLike<{ name: string }> = DefaultModelConstructor[]> = Props<TAttrs> & SubsMethods<TSubs> & {
   prototype: any;
-  data: Props<TAttrs>
+  getData(): Props<TAttrs>
   getId(): string
   setId(id: string): void
   readonly ref: DocumentReference

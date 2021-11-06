@@ -369,7 +369,7 @@ const DataTypes = {
  * @template TSubs
  * @typedef {Props<AttrsLike<TAttrs>> & SubsMethods<TSubs> & {
  *  prototype: any
- *  data: Props<AttrsLike<TAttrs>>
+ *  getData(): Props<AttrsLike<TAttrs>>
  *  getId(): string;
  *  setId(id: string): void
  *  readonly ref: DocumentReference
@@ -469,6 +469,9 @@ function defineModel(name, attributes, options = {}) {
     subcollections[subcollection.name] = subcollection
   }
 
+  const DATA_SYMBOL = Symbol.for('firestore_data')
+  const ID_SYMBOL = Symbol.for('firestore_id')
+
   class Model {
     /**
      * @param {OptionalProps<TAttrs>} model
@@ -476,18 +479,21 @@ function defineModel(name, attributes, options = {}) {
      */
     constructor(model, opts) {
       /** @private */
-      this.__id = opts.id
-      this.data = Model.formatData(model)
+      this[ID_SYMBOL] = opts.id
+      this[DATA_SYMBOL] = Model.formatData(model)
       /** @private */
       this.parentPath = opts.parentPath
     }
 
     getId() {
-      return this.__id
+      return this[ID_SYMBOL]
     }
     /** @param {string} id */
     setId(id) {
-      this.__id = id
+      this[ID_SYMBOL] = id
+    }
+    getData() {
+      return this[DATA_SYMBOL]
     }
     get path() {
       return this.parentPath ? `${this.parentPath}/${Model.name}/${this.getId()}` : `${Model.name}/${this.getId()}`
@@ -497,9 +503,9 @@ function defineModel(name, attributes, options = {}) {
     }
     save(setModel = false) {
       if (setModel) {
-        return this.ref.set(this.data)
+        return this.ref.set(this.getData())
       } else {
-        return this.ref.update(this.data)
+        return this.ref.update(this.getData())
       }
     }
     /**
@@ -522,7 +528,7 @@ function defineModel(name, attributes, options = {}) {
     toJSON() {
       return {
         id: this.getId(),
-        data: this.data,
+        data: this.getData(),
         path: this.path,
         parentPath: this.parentPath,
       }
@@ -825,7 +831,7 @@ function defineModel(name, attributes, options = {}) {
     return Model.findAll(opts).then(models => {
       const batch = admin.firestore().batch()
       models.forEach(model => {
-        opts.setModel ? batch.set(model.ref, model.data) : batch.update(model.ref, model.data)
+        opts.setModel ? batch.set(model.ref, model.getData()) : batch.update(model.ref, model.getData())
       })
       return batch.commit().then(() => models)
     })
@@ -837,19 +843,18 @@ function defineModel(name, attributes, options = {}) {
     properties[key] = {
       /** @this {Model} */
       "get": function () {
-        return this.data[key];
+        return this[DATA_SYMBOL][key];
       },
       /** @this {Model} */
       "set": function (val) {
-        this.data[key] = val;
+        this[DATA_SYMBOL][key] = val;
       }
     }
   }
   Object.defineProperties(Model.prototype, properties);
   Object.defineProperty(Model, 'name', { value: name, configurable: true })
-  /** @type {AttrsColumn<TAttrs>} */
-  Model.attributes = normalized_attributes
-  Model.subcollections = subcollections
+  Object.defineProperty(Model, 'attributes', { value: normalized_attributes, configurable: true, enumerable: true })
+  Object.defineProperty(Model, 'subcollections', { value: subcollections, configurable: true, enumerable: true })
 
   return Model;
 }
